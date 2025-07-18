@@ -36,7 +36,7 @@ content_style = st.selectbox(
 
 # Custom Prompt Input
 st.subheader("🎯 Tùy chỉnh Prompt")
-default_prompt = "You are an AI content generator specialized in car-related humor and infotainment."
+default_prompt = "You are an expert in automobiles and scale model cars, with extensive knowledge and professional-level insight across both industries."
 custom_prompt = st.text_area(
     "Nhập prompt tùy chỉnh của bạn:",
     value=default_prompt,
@@ -45,14 +45,36 @@ custom_prompt = st.text_area(
     placeholder="Ví dụ: You are a professional car reviewer with 20 years of experience..."
 )
 
+# Tone Selection
+st.subheader("🎨 Chọn Tone")
+tone_options = {
+    "Gần gũi": "Casual, funny, relatable",
+    "Thông minh": "Smart, upbeat, shareable",
+    "Dứt khoát": "Bold, sharp, confident",
+    "Mạnh mẽ": "Direct, raw, unapologetic"
+}
+selected_tone = st.selectbox(
+    "Chọn tone cho nội dung:",
+    options=list(tone_options.keys()),
+    help="Tone này sẽ ảnh hưởng đến cách viết và cảm xúc của nội dung"
+)
+tone_description = tone_options[selected_tone]
+
 # Generate random image function
 def get_random_car_image():
     """Tạo URL hình ảnh ngẫu nhiên từ các nguồn ổn định"""
+    # Sử dụng Unsplash API để lấy hình ảnh xe hơi thực tế
+    car_keywords = ["sports-car", "luxury-car", "vintage-car", "racing-car", "electric-car", "suv", "sedan", "convertible"]
+    selected_keyword = random.choice(car_keywords)
+    
     sources = [
+        f"https://source.unsplash.com/600x400/?car,{selected_keyword}",
+        f"https://source.unsplash.com/600x400/?automobile,{selected_keyword}",
+        f"https://source.unsplash.com/600x400/?vehicle,{selected_keyword}",
+        f"https://source.unsplash.com/600x400/?automotive,{selected_keyword}",
+        # Backup options
         f"https://picsum.photos/600/400?random={random.randint(1, 1000)}",
-        f"https://via.placeholder.com/600x400/4CAF50/FFFFFF?text=Car+Content",
-        f"https://dummyimage.com/600x400/ff6b6b/ffffff&text=Auto+Content",
-        f"https://picsum.photos/600/400?random={random.randint(1001, 2000)}"
+        f"https://via.placeholder.com/600x400/2C3E50/FFFFFF?text=🚗+Car+Content"
     ]
     return random.choice(sources)
 
@@ -62,7 +84,7 @@ if st.button("Tạo Nội Dung"):
         # Generate random image URL
         random_image = get_random_car_image()
         
-        # Sử dụng custom prompt thay vì prompt cố định
+        # Sử dụng custom prompt và tone thay vì prompt cố định
         prompt = f"""
         {custom_prompt}
         Create a piece of content in the following structure (JSON format):
@@ -74,8 +96,8 @@ if st.button("Tạo Nội Dung"):
         }}
         Topic context: Related to either real cars or 1:64 scale model cars.
         User-selected style: {content_style}
+        User-selected tone: {selected_tone} ({tone_description})
         Language: Vietnamese
-        Tone: Witty, engaging, internet-friendly
         Length: Max 300 words
         Ensure the output is valid JSON. Use the provided image_url exactly as given.
         """
@@ -111,18 +133,16 @@ if st.button("Tạo Nội Dung"):
                 image_url = content_data.get("image_url", random_image)
                 if image_url:
                     try:
-                        # Check if image URL is accessible
-                        response_img = requests.head(image_url, timeout=5)
-                        if response_img.status_code == 200:
-                            st.image(image_url, caption="Ảnh minh họa", use_container_width=True)
-                        else:
-                            # Fallback to a simple placeholder
-                            st.image("https://via.placeholder.com/600x400/4CAF50/FFFFFF?text=Car+Content", 
-                                   caption="Ảnh minh họa", use_container_width=True)
-                    except:
-                        # If all else fails, show a placeholder
-                        st.image("https://via.placeholder.com/600x400/4CAF50/FFFFFF?text=Car+Content", 
-                               caption="Ảnh minh họa", use_container_width=True)
+                        # Sử dụng st.image với xử lý lỗi tốt hơn
+                        st.image(image_url, caption="Ảnh minh họa", use_container_width=True)
+                    except Exception as img_error:
+                        st.warning(f"Không thể tải ảnh từ URL: {image_url}")
+                        # Fallback với placeholder tốt hơn
+                        fallback_url = "https://via.placeholder.com/600x400/2C3E50/FFFFFF?text=🚗+Car+Content"
+                        try:
+                            st.image(fallback_url, caption="Ảnh minh họa (dự phòng)", use_container_width=True)
+                        except:
+                            st.info("Không thể hiển thị hình ảnh. Vui lòng thử lại.")
                 else:
                     st.info("Không có URL hình ảnh được cung cấp.")
                     
@@ -136,12 +156,14 @@ if st.button("Tạo Nội Dung"):
 
 # Add some stats or info
 st.markdown("---")
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric("Phong cách", content_style)
 with col2:
-    st.metric("Ngôn ngữ", "Tiếng Việt")
+    st.metric("Tone", selected_tone)
 with col3:
+    st.metric("Ngôn ngữ", "Tiếng Việt")
+with col4:
     st.metric("AI Model", "Gemini 1.5 Flash")
 
 # Footer
