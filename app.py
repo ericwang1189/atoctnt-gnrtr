@@ -34,6 +34,17 @@ content_style = st.selectbox(
     ("Short Joke", "Fact", "Fun", "Dark joke")
 )
 
+# Custom Prompt Input
+st.subheader("🎯 Tùy chỉnh Prompt")
+default_prompt = "You are an AI content generator specialized in car-related humor and infotainment."
+custom_prompt = st.text_area(
+    "Nhập prompt tùy chỉnh của bạn:",
+    value=default_prompt,
+    height=100,
+    help="Đây là phần mô tả vai trò của AI. Bạn có thể thay đổi để tạo ra nội dung theo ý muốn.",
+    placeholder="Ví dụ: You are a professional car reviewer with 20 years of experience..."
+)
+
 # Generate random image function
 def get_random_car_image():
     """Tạo URL hình ảnh ngẫu nhiên từ các nguồn ổn định"""
@@ -51,8 +62,9 @@ if st.button("Tạo Nội Dung"):
         # Generate random image URL
         random_image = get_random_car_image()
         
+        # Sử dụng custom prompt thay vì prompt cố định
         prompt = f"""
-        You are an AI content generator specialized in car-related humor and infotainment.
+        {custom_prompt}
         Create a piece of content in the following structure (JSON format):
         {{
           "title": "...",
